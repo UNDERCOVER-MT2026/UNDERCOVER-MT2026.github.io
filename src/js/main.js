@@ -281,6 +281,26 @@ var mtLayerC = createMTLayer(mt_c, 'green', 'MT_C');
 var mtBatCircleLayer = createMTXLayer(mt_BatCircle, 'MT_BatCircle');
 var mt2024Layer = createMTXLayer(mt_2024, 'MT_2024');
 
+// Wrap MT C layer and labels together
+var mtLayerCGroup = L.featureGroup([mtLayerC]);
+
+// Add labels to the same group so they toggle together
+map.on('overlayadd', function (e) {
+    if (e.name === 'MT C (Green)') {
+        for (const tooltip of mtCTooltips) {
+            tooltip.addTo(map);
+        }
+    }
+});
+
+map.on('overlayremove', function (e) {
+    if (e.name === 'MT C (Green)') {
+        for (const tooltip of mtCTooltips) {
+            tooltip.remove();
+        }
+    }
+});
+
 
 // 🔐 Replace with your actual API key
 
@@ -422,6 +442,24 @@ const faultLayer = L.geoJSON(fault, {
 })
 
 
+const protectedAreasLayer = L.geoJSON(protected_areas, {
+    style: function () {
+        return {
+            color: 'gray',
+            weight: 1,
+            opacity: 0.5,
+            fillOpacity: 0.2
+        };
+    },
+    onEachFeature: function (feature, layer) {
+        const p = feature.properties;
+        const name = p.nimisuomi || p.nimiruotsi || "Unnamed";
+        let popupContent = `<strong>${name}</strong>`;
+        layer.bindPopup(popupContent);
+    }
+})
+
+
 var baseLayers = []; // (optional)
 
 var groupedOverlays = [
@@ -460,6 +498,13 @@ var groupedOverlays = [
             { name: "Geology", layer: geologyLayer },
             { name: "Faults", layer: faultLayer }
         ]
+    },
+    {
+        group: "Protected Areas",
+        collapsed: true,
+        layers: [
+            { name: "Protected Areas", layer: protectedAreasLayer }
+        ]
     }
 ];
 
@@ -467,7 +512,7 @@ var groupedOverlays = [
 mtLayerA.addTo(map);
 mtLayerB.addTo(map);
 mtLayerC.addTo(map);
-
+protectedAreasLayer.addTo(map);
 // var overlayMaps = {
 //     "MT A (Red)": mtLayerA,
 //     "MT B (Blue)": mtLayerB,
@@ -485,7 +530,6 @@ mtLayerC.addTo(map);
 //     position: 'topright'
 // }).addTo(map);
 L.control.panelLayers(baseLayers, groupedOverlays, {
-    title: 'Legend',
     compact: true, // true = collapsed groups by default
     collapsibleGroups: true,
     position: 'topright'
