@@ -45,6 +45,61 @@ body,
   font-size: 20px;
 }
 
+/* MT Search */
+.mt-search-control {
+  background: #fff;
+  clear: both;
+  overflow: hidden;
+}
+
+.mt-search-form {
+  display: flex;
+  align-items: stretch;
+  width: 30px;
+  height: 30px;
+  transition: width 0.18s ease;
+}
+
+.mt-search-control.is-expanded .mt-search-form,
+.mt-search-control:focus-within .mt-search-form {
+  width: 150px;
+}
+
+.mt-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  border-right: 1px solid #ccc;
+  padding: 0 6px;
+  font-size: 13px;
+  outline: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.mt-search-control.is-expanded .mt-search-input,
+.mt-search-control:focus-within .mt-search-input {
+  opacity: 1;
+}
+
+.mt-search-control:not(.is-expanded):not(:focus-within) .mt-search-input {
+  display: none;
+}
+
+.mt-search-button {
+  flex: 0 0 30px;
+  height: 30px;
+  border: 0;
+  background: #f8f8f8;
+  color: #222;
+  cursor: pointer;
+}
+
+.mt-search-button:hover,
+.mt-search-button:focus {
+  background: #e9ecef;
+}
+
 /* MT Station Labels */
 .mt-label {
   font-size: 12px;
@@ -73,6 +128,29 @@ body,
 }
 
 @media (max-width: 768px) {
+  .mt-search-form,
+  .mt-search-button {
+    height: 36px;
+  }
+
+  .mt-search-form {
+    width: 36px;
+  }
+
+  .mt-search-control.is-expanded .mt-search-form,
+  .mt-search-control:focus-within .mt-search-form {
+    width: min(190px, calc(100vw - 88px));
+  }
+
+  .mt-search-input {
+    font-size: 16px;
+    padding: 0 8px;
+  }
+
+  .mt-search-button {
+    flex-basis: 36px;
+  }
+
   .leaflet-control-layers label {
     padding: 8px 12px;
     font-size: 16px;

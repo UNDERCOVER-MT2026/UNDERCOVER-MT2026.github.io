@@ -281,6 +281,106 @@ var mtLayerC = createMTLayer(mt_c, 'green', 'MT_C');
 var mtBatCircleLayer = createMTXLayer(mt_BatCircle, 'MT_BatCircle');
 var mt2024Layer = createMTXLayer(mt_2024, 'MT_2024');
 
+function normalizeSearchText(value) {
+    return String(value || "").trim().toLowerCase().replace(/^und_?/, "");
+}
+
+function createMTSearchControl(mtLayer, options) {
+    const settings = Object.assign({
+        label: 'MT',
+        layerName: 'MT',
+        datalistId: 'mt-search-options'
+    }, options || {});
+    const stations = [];
+
+    mtLayer.eachLayer(function (layer) {
+        const name = layer.feature && layer.feature.properties && layer.feature.properties.name;
+        if (name) {
+            stations.push({
+                name: name,
+                key: normalizeSearchText(name),
+                layer: layer
+            });
+        }
+    });
+
+    const MTSearchControl = L.Control.extend({
+        options: {
+            position: 'topright'
+        },
+
+        onAdd: function () {
+            const container = L.DomUtil.create('div', 'leaflet-bar mt-search-control');
+            const form = L.DomUtil.create('form', 'mt-search-form', container);
+            const input = L.DomUtil.create('input', 'mt-search-input', form);
+            const datalist = L.DomUtil.create('datalist', '', form);
+            const button = L.DomUtil.create('button', 'mt-search-button', form);
+
+            datalist.id = settings.datalistId;
+            input.type = 'search';
+            input.placeholder = settings.label;
+            input.setAttribute('aria-label', 'Search ' + settings.layerName + ' station');
+            input.setAttribute('list', datalist.id);
+            button.type = 'submit';
+            button.title = 'Search ' + settings.layerName;
+            button.setAttribute('aria-label', 'Search ' + settings.layerName);
+            button.innerHTML = '<i class="fa fa-search" aria-hidden="true"></i>';
+
+            stations.forEach(function (station) {
+                const option = L.DomUtil.create('option', '', datalist);
+                option.value = station.name;
+            });
+
+            L.DomEvent.disableClickPropagation(container);
+            L.DomEvent.disableScrollPropagation(container);
+
+            L.DomEvent.on(button, 'click', function (event) {
+                if (!container.classList.contains('is-expanded')) {
+                    L.DomEvent.preventDefault(event);
+                    container.classList.add('is-expanded');
+                    input.focus();
+                }
+            });
+
+            L.DomEvent.on(form, 'submit', function (event) {
+                L.DomEvent.preventDefault(event);
+
+                const query = normalizeSearchText(input.value);
+                if (!query) {
+                    container.classList.add('is-expanded');
+                    input.focus();
+                    return;
+                }
+
+                const match = stations.find(function (station) {
+                    return station.key === query || station.name.toLowerCase() === input.value.trim().toLowerCase();
+                }) || stations.find(function (station) {
+                    return station.key.includes(query) || station.name.toLowerCase().includes(query);
+                });
+
+                if (!match) {
+                    notification.warning('Not found', 'No ' + settings.layerName + ' station matches "' + input.value + '"');
+                    return;
+                }
+
+                if (!map.hasLayer(mtLayer)) {
+                    mtLayer.addTo(map);
+                }
+
+                const latLng = match.layer.getLatLng();
+                map.setView(latLng, Math.max(map.getZoom(), 14), {
+                    animate: true
+                });
+                match.layer.openPopup();
+            });
+
+            return container;
+        }
+    });
+
+    return new MTSearchControl();
+}
+
 // Wrap MT C layer and labels together
 var mtLayerCGroup = L.featureGroup([mtLayerC]);
 
@@ -533,4 +633,10 @@ L.control.panelLayers(baseLayers, groupedOverlays, {
     compact: true, // true = collapsed groups by default
     collapsibleGroups: true,
     position: 'topright'
+}).addTo(map);
+
+createMTSearchControl(mtLayerA, {
+    label: 'MT A',
+    layerName: 'MT A',
+    datalistId: 'mt-a-search-options'
 }).addTo(map);
