@@ -147,11 +147,61 @@ map.on('popupopen', function (e) {
 
 var ctrl = L.control.iconLayers(layers).addTo(map);
 
-let mtCTooltips = []; // Store tooltips for zoom toggle
+let mtATooltips = []; // Store MT A tooltips for layer toggle
+
+function getStationBaseCode(value) {
+    const match = String(value || "").trim().toLowerCase().match(/(\d+)[a-z]?$/);
+    return match ? match[1] : null;
+}
+
+const completedStationCodes = new Set(
+    (typeof completedStations !== "undefined" ? completedStations : [])
+        .map(getStationBaseCode)
+        .filter(Boolean)
+);
+
+function isCompletedStation(feature) {
+    return completedStationCodes.has(getStationBaseCode(feature.properties && feature.properties.name));
+}
+
+function addTouchTarget(layer, latlng, popupContent) {
+    const touchTarget = L.circleMarker(latlng, {
+        radius: 14,
+        stroke: false,
+        fill: true,
+        fillColor: '#000',
+        fillOpacity: 0,
+        interactive: true,
+        bubblingMouseEvents: false
+    });
+
+    touchTarget.bindPopup(popupContent);
+    touchTarget.on('click', function () {
+        layer.openPopup();
+    });
+
+    return touchTarget;
+}
+
+function getVisiblePointLayer(layer) {
+    return layer.getLayers ? layer.getLayers()[1] : layer;
+}
+
+function getFeatureLatLng(layer) {
+    return getVisiblePointLayer(layer).getLatLng();
+}
+
+function openFeaturePopup(layer) {
+    getVisiblePointLayer(layer).openPopup();
+}
+
 function createMTLayer(data, color, layerName) {
     return L.geoJson(data, {
+        filter: function (feature) {
+            return !isCompletedStation(feature);
+        },
         pointToLayer: function (feature, latlng) {
-            return L.circleMarker(latlng, {
+            const visibleMarker = L.circleMarker(latlng, {
                 radius: 6,
                 fillColor: color,
                 color: '#000',
@@ -159,10 +209,12 @@ function createMTLayer(data, color, layerName) {
                 opacity: 1,
                 fillOpacity: 0.8
             });
+            return L.layerGroup([addTouchTarget(visibleMarker, latlng, ""), visibleMarker]);
         },
         onEachFeature: function (feature, layer) {
             let popupContent = "";
             const name = feature.properties.name || "";
+            const visibleMarker = getVisiblePointLayer(layer);
 
             // ✅ Match note from stationNotes by checking if any key is in name
             let matchedNote = null;
@@ -185,23 +237,88 @@ function createMTLayer(data, color, layerName) {
                 popupContent += `<b>Note:</b> ${matchedNote}<br>`;
             }
             popupContent += `<hr style="margin: 4px 0; border-top: 3px solid #aaa;">`;  // clean divider
-            popupContent += `<a href="#" class="navigate-link" data-lat="${layer.getLatLng().lat}" data-lng="${layer.getLatLng().lng}">📍 Navigate here</a>`;
+            popupContent += `<a href="#" class="navigate-link" data-lat="${visibleMarker.getLatLng().lat}" data-lng="${visibleMarker.getLatLng().lng}">📍 Navigate here</a>`;
 
-            layer.bindPopup(popupContent);
+            layer.eachLayer(function (targetLayer) {
+                targetLayer.bindPopup(popupContent);
+            });
 
-            // ✅ Add label only to MT_C
-            if (layerName === 'MT_C' && name) {
+            // Add labels only to MT_A
+            if (layerName === 'MT_A' && name) {
                 const tooltip = L.tooltip({
                     permanent: true,
                     direction: 'top',
                     className: 'mt-label'
                 })
                     .setContent(name)
-                    .setLatLng(layer.getLatLng())
+                    .setLatLng(visibleMarker.getLatLng())
                     .addTo(map);
 
-                mtCTooltips.push(tooltip);
+                mtATooltips.push(tooltip);
             }
+        }
+    });
+}
+
+function buildCompletedStationsData(dataSources) {
+    const completedFeatures = [];
+    const addedCodes = new Set();
+
+    // Search each MT file in order. With [mt_a, mt_b, mt_c], A is preferred,
+    // then B, then C when a station is missing from earlier files.
+    dataSources.forEach(function (data) {
+        data.features.forEach(function (feature) {
+            const code = getStationBaseCode(feature.properties && feature.properties.name);
+            if (!completedStationCodes.has(code) || addedCodes.has(code)) {
+                return;
+            }
+
+            completedFeatures.push({
+                type: "Feature",
+                properties: {
+                    name: "und_" + code,
+                    sourceName: feature.properties.name,
+                    status: "Completed"
+                },
+                geometry: feature.geometry
+            });
+            addedCodes.add(code);
+        });
+    });
+
+    return {
+        type: "FeatureCollection",
+        features: completedFeatures
+    };
+}
+
+function createCompletedStationsLayer(data) {
+    return L.geoJson(data, {
+        pointToLayer: function (feature, latlng) {
+            const visibleMarker = L.circleMarker(latlng, {
+                radius: 7,
+                fillColor: '#777',
+                color: '#333',
+                weight: 1.5,
+                opacity: 1,
+                fillOpacity: 0.9
+            });
+            return L.layerGroup([addTouchTarget(visibleMarker, latlng, ""), visibleMarker]);
+        },
+        onEachFeature: function (feature, layer) {
+            const visibleMarker = getVisiblePointLayer(layer);
+            const latLng = visibleMarker.getLatLng();
+            const name = feature.properties.name || "";
+            let popupContent = "";
+
+            popupContent += `<b>Name:</b> ${name}<br>`;
+            popupContent += `<b>Status:</b> Completed<br>`;
+            popupContent += `<hr style="margin: 4px 0; border-top: 3px solid #aaa;">`;
+            popupContent += `<a href="#" class="navigate-link" data-lat="${latLng.lat}" data-lng="${latLng.lng}">📍 Navigate here</a>`;
+
+            layer.eachLayer(function (targetLayer) {
+                targetLayer.bindPopup(popupContent);
+            });
         }
     });
 }
@@ -280,6 +397,7 @@ var mtLayerB = createMTLayer(mt_b, 'blue', 'MT_B');
 var mtLayerC = createMTLayer(mt_c, 'green', 'MT_C');
 var mtBatCircleLayer = createMTXLayer(mt_BatCircle, 'MT_BatCircle');
 var mt2024Layer = createMTXLayer(mt_2024, 'MT_2024');
+var completedStationsLayer = createCompletedStationsLayer(buildCompletedStationsData([mt_a, mt_b, mt_c]));
 
 function normalizeSearchText(value) {
     return String(value || "").trim().toLowerCase().replace(/^und_?/, "");
@@ -367,11 +485,11 @@ function createMTSearchControl(mtLayer, options) {
                     mtLayer.addTo(map);
                 }
 
-                const latLng = match.layer.getLatLng();
+                const latLng = getFeatureLatLng(match.layer);
                 map.setView(latLng, Math.max(map.getZoom(), 14), {
                     animate: true
                 });
-                match.layer.openPopup();
+                openFeaturePopup(match.layer);
             });
 
             return container;
@@ -381,21 +499,18 @@ function createMTSearchControl(mtLayer, options) {
     return new MTSearchControl();
 }
 
-// Wrap MT C layer and labels together
-var mtLayerCGroup = L.featureGroup([mtLayerC]);
-
-// Add labels to the same group so they toggle together
+// Toggle MT A labels together with the MT A layer
 map.on('overlayadd', function (e) {
-    if (e.name === 'MT C (Green)') {
-        for (const tooltip of mtCTooltips) {
+    if (e.name === 'MT A (Red)') {
+        for (const tooltip of mtATooltips) {
             tooltip.addTo(map);
         }
     }
 });
 
 map.on('overlayremove', function (e) {
-    if (e.name === 'MT C (Green)') {
-        for (const tooltip of mtCTooltips) {
+    if (e.name === 'MT A (Red)') {
+        for (const tooltip of mtATooltips) {
             tooltip.remove();
         }
     }
@@ -570,6 +685,7 @@ var groupedOverlays = [
             { name: "MT A (Red)", layer: mtLayerA },
             { name: "MT B (Blue)", layer: mtLayerB },
             { name: "MT C (Green)", layer: mtLayerC },
+            { name: "Completed MT (Grey)", layer: completedStationsLayer },
             { name: "MT BatCircle (X)", layer: mtBatCircleLayer },
             { name: "MT 2025 (X)", layer: mt2024Layer }
         ]
@@ -612,6 +728,7 @@ var groupedOverlays = [
 mtLayerA.addTo(map);
 mtLayerB.addTo(map);
 mtLayerC.addTo(map);
+completedStationsLayer.addTo(map);
 protectedAreasLayer.addTo(map);
 // var overlayMaps = {
 //     "MT A (Red)": mtLayerA,
