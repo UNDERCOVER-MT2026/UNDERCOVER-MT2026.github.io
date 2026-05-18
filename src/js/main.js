@@ -160,8 +160,19 @@ const completedStationCodes = new Set(
         .filter(Boolean)
 );
 
-function isCompletedStation(feature) {
-    return completedStationCodes.has(getStationBaseCode(feature.properties && feature.properties.name));
+const runningStationCodes = new Set(
+    (typeof runningStations !== "undefined" ? runningStations : [])
+        .map(getStationBaseCode)
+        .filter(Boolean)
+        .filter(function (code) {
+            return !completedStationCodes.has(code);
+        })
+);
+
+const taggedStationCodes = new Set([...completedStationCodes, ...runningStationCodes]);
+
+function isTaggedStation(feature) {
+    return taggedStationCodes.has(getStationBaseCode(feature.properties && feature.properties.name));
 }
 
 function addTouchTarget(layer, latlng, popupContent) {
@@ -198,7 +209,7 @@ function openFeaturePopup(layer) {
 function createMTLayer(data, color, layerName) {
     return L.geoJson(data, {
         filter: function (feature) {
-            return !isCompletedStation(feature);
+            return !isTaggedStation(feature);
         },
         pointToLayer: function (feature, latlng) {
             const visibleMarker = L.circleMarker(latlng, {
@@ -260,8 +271,8 @@ function createMTLayer(data, color, layerName) {
     });
 }
 
-function buildCompletedStationsData(dataSources) {
-    const completedFeatures = [];
+function buildStationStatusData(dataSources, stationCodes, status) {
+    const statusFeatures = [];
     const addedCodes = new Set();
 
     // Search each MT file in order. With [mt_a, mt_b, mt_c], A is preferred,
@@ -269,16 +280,16 @@ function buildCompletedStationsData(dataSources) {
     dataSources.forEach(function (data) {
         data.features.forEach(function (feature) {
             const code = getStationBaseCode(feature.properties && feature.properties.name);
-            if (!completedStationCodes.has(code) || addedCodes.has(code)) {
+            if (!stationCodes.has(code) || addedCodes.has(code)) {
                 return;
             }
 
-            completedFeatures.push({
+            statusFeatures.push({
                 type: "Feature",
                 properties: {
                     name: "und_" + code,
                     sourceName: feature.properties.name,
-                    status: "Completed"
+                    status: status
                 },
                 geometry: feature.geometry
             });
@@ -288,17 +299,17 @@ function buildCompletedStationsData(dataSources) {
 
     return {
         type: "FeatureCollection",
-        features: completedFeatures
+        features: statusFeatures
     };
 }
 
-function createCompletedStationsLayer(data) {
+function createStationStatusLayer(data, style) {
     return L.geoJson(data, {
         pointToLayer: function (feature, latlng) {
             const visibleMarker = L.circleMarker(latlng, {
                 radius: 7,
-                fillColor: '#777',
-                color: '#333',
+                fillColor: style.fillColor,
+                color: style.color,
                 weight: 1.5,
                 opacity: 1,
                 fillOpacity: 0.9
@@ -309,10 +320,11 @@ function createCompletedStationsLayer(data) {
             const visibleMarker = getVisiblePointLayer(layer);
             const latLng = visibleMarker.getLatLng();
             const name = feature.properties.name || "";
+            const status = feature.properties.status || "";
             let popupContent = "";
 
             popupContent += `<b>Name:</b> ${name}<br>`;
-            popupContent += `<b>Status:</b> Completed<br>`;
+            popupContent += `<b>Status:</b> ${status}<br>`;
             popupContent += `<hr style="margin: 4px 0; border-top: 3px solid #aaa;">`;
             popupContent += `<a href="#" class="navigate-link" data-lat="${latLng.lat}" data-lng="${latLng.lng}">📍 Navigate here</a>`;
 
@@ -397,7 +409,14 @@ var mtLayerB = createMTLayer(mt_b, 'blue', 'MT_B');
 var mtLayerC = createMTLayer(mt_c, 'green', 'MT_C');
 var mtBatCircleLayer = createMTXLayer(mt_BatCircle, 'MT_BatCircle');
 var mt2024Layer = createMTXLayer(mt_2024, 'MT_2024');
-var completedStationsLayer = createCompletedStationsLayer(buildCompletedStationsData([mt_a, mt_b, mt_c]));
+var runningStationsLayer = createStationStatusLayer(
+    buildStationStatusData([mt_a, mt_b, mt_c], runningStationCodes, "Running"),
+    { fillColor: '#ffea00', color: '#7a6500' }
+);
+var completedStationsLayer = createStationStatusLayer(
+    buildStationStatusData([mt_a, mt_b, mt_c], completedStationCodes, "Completed"),
+    { fillColor: '#777', color: '#333' }
+);
 
 function normalizeSearchText(value) {
     return String(value || "").trim().toLowerCase().replace(/^und_?/, "");
@@ -685,6 +704,7 @@ var groupedOverlays = [
             { name: "MT A (Red)", layer: mtLayerA },
             { name: "MT B (Blue)", layer: mtLayerB },
             { name: "MT C (Green)", layer: mtLayerC },
+            { name: "Running MT (Yellow)", layer: runningStationsLayer },
             { name: "Completed MT (Grey)", layer: completedStationsLayer },
             { name: "MT BatCircle (X)", layer: mtBatCircleLayer },
             { name: "MT 2025 (X)", layer: mt2024Layer }
@@ -728,6 +748,7 @@ var groupedOverlays = [
 mtLayerA.addTo(map);
 mtLayerB.addTo(map);
 mtLayerC.addTo(map);
+runningStationsLayer.addTo(map);
 completedStationsLayer.addTo(map);
 protectedAreasLayer.addTo(map);
 // var overlayMaps = {
