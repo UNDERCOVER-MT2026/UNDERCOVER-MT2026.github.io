@@ -9,4 +9,5 @@ var stationNotes = {
     "304": "a&b-Landowner visits survey site during installation: Inform Uula/Tuija if planning to to access site",
     "325": "a-Declined by landowner. DO NOT MEASURE here! Skip the a option",
     "450": "a-Declined by landowner. DO NOT MEASURE here! Skip the a option",
+    "329": "a-Landowner visits survey site during installlation (can speak Czech, German, English).Inform Uula/Tuija if planning to to access site"
 }
