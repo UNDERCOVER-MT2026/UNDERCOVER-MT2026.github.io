@@ -3,10 +3,10 @@
 // var runningStations = [304];
 // var completedStations = [304, 365];
 var runningStations =
-    [   303, 306, 353,
+    [   301, 303, 306, 353,
         354, 360, 364,
         365, 373, 375,
-        376, 382, 386
+        376, 386
     ];
 var completedStations =
     [   302, 363, 371, 372, 374,
