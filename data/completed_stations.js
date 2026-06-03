@@ -3,10 +3,9 @@
 // var runningStations = [304];
 // var completedStations = [304, 365];
 var runningStations =
-    [   310, 315, 322, 331,
+    [   310, 315, 322, 325, 331,
         334, 340, 341, 345, 355,
         
-        371,
         304, 305, 309 // GTK Stations
     ];
 var completedStations =
