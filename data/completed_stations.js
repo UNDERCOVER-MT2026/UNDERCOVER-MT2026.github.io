@@ -6,7 +6,8 @@ var runningStations =
     [   310, 315, 322, 331,
         334, 340, 341, 345, 355,
         
-        371
+        371,
+        304, 305, 309 // GTK Stations
     ];
 var completedStations =
     [   301, 302, 303, 306, 353, 354, 
