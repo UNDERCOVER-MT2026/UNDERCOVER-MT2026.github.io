@@ -1,4 +1,4 @@
-// Add stations here using the station number only.
+i// Add stations here using the station number only.
 // Example:
 // var runningStations = [304];
 // var completedStations = [304, 365];
@@ -40,7 +40,7 @@ var completedStations =
       440,479,441,
 457, 449, 434,447,
 462,461,463,452,
-445,
+445,478,433,
         304, 305, 309, 314, 308, 307, 317, 328, 321, 318, 320, 314, 308, 307, 327  // GTK Stations
     ];
 
