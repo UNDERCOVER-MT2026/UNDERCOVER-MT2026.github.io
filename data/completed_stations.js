@@ -3,8 +3,8 @@ i// Add stations here using the station number only.
 // var runningStations = [304];
 // var completedStations = [304, 365];
 var runningStations =
-    [ 473, 466, 476, 474, 460, 468, 456, 442, 458, 451, 450, 459 ,
-
+    [ 400, 408, 401 ,467, 420,
+473, 466, 476, 474, , 456, 442, 
  
         
         311, 313, 312, 326, 327, 319, 324, 316, 317 // GTK Stations
@@ -41,6 +41,8 @@ var completedStations =
 457, 449, 434,447,
 462,461,463,452,
 445,478,433,
+451,450, 458,
+468, 460, 459,
         304, 305, 309, 314, 308, 307, 317, 328, 321, 318, 320, 314, 308, 307, 327  // GTK Stations
     ];
 
