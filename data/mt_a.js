@@ -2499,6 +2499,21 @@ var mt_a = {
                     66.28349884278353
                 ]
             }
+        },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 181,
+                "name": "und_047"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    27.635000,
+                    65.469000,
+
+                ]
+            }
         }
     ]
 };
