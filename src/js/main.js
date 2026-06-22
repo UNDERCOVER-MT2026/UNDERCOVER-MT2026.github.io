@@ -714,7 +714,7 @@ var groupedOverlays = [
         group: "Cadastre",
         collapsed: true,
         layers: [
-            { name: "Cadastre boundary", layer: kiinteistojaotusLayer },
+            { name: "Cadastre boundary", layer: kiinteistojaotusLayer, active: true },
             { name: "Cadastre codes", layer: kiinteistotunnuksetLayer }
         ]
     },

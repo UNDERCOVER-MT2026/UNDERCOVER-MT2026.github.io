@@ -2511,9 +2511,17 @@ var mt_a = {
                 "coordinates": [
                     27.635000,
                     65.469000,
-
                 ]
             }
-        }
+        },
+        { "type": "Feature", "properties": { "id": 1, "name": "bonus_1" }, "geometry": { "type": "Point", "coordinates": [28.070398542563396, 66.009801168825049] } },
+        { "type": "Feature", "properties": { "id": 183, "name": "bonus_2" }, "geometry": { "type": "Point", "coordinates": [28.200220076373942, 65.970786951049831] } },
+        { "type": "Feature", "properties": { "id": 184, "name": "bonus_3" }, "geometry": { "type": "Point", "coordinates": [28.731326091362781, 66.444448441950229] } },
+        { "type": "Feature", "properties": { "id": 185, "name": "bonus_4" }, "geometry": { "type": "Point", "coordinates": [28.571934641235259, 66.526550437007472] } },
+        { "type": "Feature", "properties": { "id": 186, "name": "bonus_5" }, "geometry": { "type": "Point", "coordinates": [28.112616393133003, 66.49605864550152] } },
+        { "type": "Feature", "properties": { "id": 187, "name": "bonus_6" }, "geometry": { "type": "Point", "coordinates": [27.607645037049238, 65.852785676702283] } },
+        { "type": "Feature", "properties": { "id": 188, "name": "bonus_7" }, "geometry": { "type": "Point", "coordinates": [27.961689808098409, 65.90239487843499] } },
+        { "type": "Feature", "properties": { "id": 189, "name": "bonus_8" }, "geometry": { "type": "Point", "coordinates": [28.33098281011306, 66.309671315582307] } },
+        { "type": "Feature", "properties": { "id": 190, "name": "bonus_9" }, "geometry": { "type": "Point", "coordinates": [27.740174225775281, 66.232724245164391] } }
     ]
 };
