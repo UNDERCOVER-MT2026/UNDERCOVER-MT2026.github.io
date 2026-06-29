@@ -2514,6 +2514,21 @@ var mt_a = {
                 ]
             }
         },
+        {
+            "type": "Feature",
+            "properties": {
+                "id": 220,
+                "name": "und_008"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    28.459858889614708,
+                    66.0959794717374,
+                ]
+            }
+        },
+
         { "type": "Feature", "properties": { "id": 1, "name": "bonus_1" }, "geometry": { "type": "Point", "coordinates": [28.070398542563396, 66.009801168825049] } },
         { "type": "Feature", "properties": { "id": 183, "name": "bonus_2" }, "geometry": { "type": "Point", "coordinates": [28.200220076373942, 65.970786951049831] } },
         { "type": "Feature", "properties": { "id": 184, "name": "bonus_3" }, "geometry": { "type": "Point", "coordinates": [28.731326091362781, 66.444448441950229] } },
