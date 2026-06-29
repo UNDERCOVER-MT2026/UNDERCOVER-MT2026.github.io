@@ -287,7 +287,7 @@ function buildStationStatusData(dataSources, stationCodes, status) {
             statusFeatures.push({
                 type: "Feature",
                 properties: {
-                    name: "und_" + code,
+                    name: code,
                     sourceName: feature.properties.name,
                     status: status
                 },
